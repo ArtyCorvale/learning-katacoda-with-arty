@@ -1,3 +1,6 @@
+//I put this together after wtching Liz Rice do a presentation on making containers from scratch at GOTO 2018
+//This is her code, but putting it together helped me understand what exactly is happening when a container is made.
+
 package main
 
 import (
@@ -15,6 +18,7 @@ import (
 // go run main.go (compiles and run executable)
 // needs a command run, process <cmd> and arbitrary <params>
 
+//Here we define what the first argument can be.
 func main () {
 	switch os.Args[1] {
 	case "run":
@@ -26,6 +30,9 @@ func main () {
 	}
 }
 
+//Here we define the run function, which runs the container in three new namespaces.
+//Interestingly, we can't rename the container until the container is active, but it's not active until the run function has completed.
+//So the run functions procs itself and feeds in the child argument to run the child function we see later.
 func run () {
 	fmt.Printf("Running %v as %d\n", os.Args[2:], os.Getpid())
 
@@ -42,6 +49,10 @@ func run () {
 
 }
 
+//The child function configures the container once it is running.
+//It changes the hostname, the root directory (you'll want to edit this if you're going to run this yourself), and mounts proc
+//It then executes any subsequent commands that are fed in after "run".
+//It also unounts proc once it exits.
 func child () {
 	fmt.Printf("Running %v as %d\n", os.Args[2:], os.Getpid())
 
@@ -63,6 +74,8 @@ func child () {
 
 }
 
+//This function sets up a control group and is executed in the child function.
+//It sets pids.max to 20, which means the container can be fork bombed but not impact the host system.
 func cg() {
 	cgroups := "/sys/fs/cgroup/"
 	pids := filepath.Join(cgroups, "pids")

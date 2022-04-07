@@ -1,0 +1,75 @@
+#Today I'm learning about Docker via Katacoda.
+#While I believe I have a firm understanding of what a container is thanks to my previous commit (main.go), I realise I've never actually used docker before, thus I'm unfamiliar with its commands.
+#So far, Katacoda has shown me how to deploy a docker image, specifically redis. The following command will deploy redis in the background:
+
+docker run -d redis
+
+#This is all well and good, but the continer is given a random name I have to memorise that is disconnected from its function.
+#In my case, it was laughing_lovelace. As jovial as that sounds, it's not particulary descriptive of its function.
+#Furthermore, I have no access to the container! I'll need to gain access to it by assigning a port to it.
+#To solve both these issues, I ran the following command:
+
+docker run -d --name redisHostPort -p 6379:6379 redis:current
+
+#This spins up a container called redisHostPort which uses the host port 6379 and the container port 6379. This port was chosen as it's the default for redis.
+#Alas, we run in to another issue. What if we want to use multiple containers at the same time? Each container can have port 6379 open, but the host system can't connect to all of them via its own port 6379.
+#Fortunately not specifying which host port you want to use will open the container on a random port:
+
+docker run -d --name redisDynamic -p 6379 redis:latest
+
+#This will open a redis image container. The container will have port 6379 open, but will be exposed to a random port on the host. A solution!
+#You can specify which port on the host you want it to be exposed to with the format:
+
+-p <hostport>:6379
+
+#But for now, random works! You can view which port a randomly assigned docker container is open on using:
+
+docker port redisDynamic 6379
+
+#or,  you can use
+
+docker ps
+
+#to view all open containers and the ports they're running on from the host system's perspective.
+
+#Now we have another problem. Once the container is closed, the data is lost! (Oh no!)
+#We would like to have persistent data that can be reused when a new container is spun up.
+#Fortunately, docker makes this very easy! All we have to do is specify the host directory where data will be saved, then specify what that directory looks like to the container using this format:
+
+-v <host directory>:<container directory>
+
+#Simple! Now, every time we spin up a container, we can specify where we want it to look for persistent data, now stored on the host.
+#This was the command katacoda is using for its example:
+
+docker run -d --name redisMapped -v /opt/docker/data/redis:/data redis
+
+#The reason we are using /data to store information within the container is because that's where Redis stores logs and data by default.
+#The reason we are using /opt/docker/data/redis as the place the host is putting data wasn't explained, but I get the feeling that it's related to docker.
+#You can also use $PWD instead of the full name of the current working directory.
+
+#Now we want to run a container in the foreground, which we'd want to do if we want to run ps (to view PIDs) or bash.
+#For this, we can use -it
+#Additionally, certain images allow you to override the command used to launch the image.
+#This means if you launched the image to run OS commands, you can change it to a bash prompt instead.
+
+#Switching gears, we're moving on to deploying an Ubuntu container and executing 
+
+docker run ubuntu ps
+
+#This will run ps to view processes within that container.
+#To run a bash shell within this container, we can do:
+
+docker run -it ubuntu bash
+
+#And that's the scenario complete! Let's review what we learned:
+docker run #and specifying an image will run that image
+-p #this allows us to specify a port in the format <host>:<container>. Only one number opens a container at that port on a random host port.
+-v #this allows us to specify the directory where data is saved from the container to allow persistant data. This is in the format <host directory>:container directory>
+--name #allows us to rename the container
+#And finally, appending a command after the name of the image will allow us to run a command as soon as that container opens.
+
+#Addinitonal things I learned:
+#This will stop a container from running, but not remove it:
+docker stop <containe>
+#This will remove a container, freeing up the container name. This can only be done once a container is stopped:
+docker rm <container>

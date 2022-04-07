@@ -1,3 +1,4 @@
+#!bin/bash
 #Today I'm learning about Docker via Katacoda.
 #While I believe I have a firm understanding of what a container is thanks to my previous commit (main.go), I realise I've never actually used docker before, thus I'm unfamiliar with its commands.
 #So far, Katacoda has shown me how to deploy a docker image, specifically redis. The following command will deploy redis in the background:
